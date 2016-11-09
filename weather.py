@@ -22,15 +22,13 @@ def make_windows_array(weather_data, threshold):
     ### Thresholding
     
     # Initialization of the of the weather data array
-    weather_thresh = np.zeros(len(weather_data))
+    weather_thresh = ''.join(str(int(val < threshold)) 
+                             for val in weather_data).split('0') 
     
     # Thresholding using numpy array methods and properties 
-    weather_thresh[weather_data < threshold] = 1
-    
     # Creation of the data string, casting to integer, conversion to list then 
     # join to string, split on "0", return list. 
-    weather_thresh = ''.join([str(e) for e in weather_thresh.
-                              astype(int).tolist()]).split("0")
+
     
     ### Creation of the windows array
     # Initialization of the array    
