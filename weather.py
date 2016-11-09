@@ -1,10 +1,3 @@
-## TODO: add proper doc
-## TODO: add proper comments
-## TODO: add proper tests
-## TODO: add preprocessing routines (thresholds, pandas...)
-## TODO: add post processing routines (percentiles, months...)
-## TODO: add regex spliting instead of buggy split and adding zeros
-
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -27,6 +20,7 @@ def make_windows_array(weather_data, threshold):
         threshold = the threshold related to the nautical spread (float)
     '''
     ### Thresholding
+    
     # Initialization of the of the weather data array
     weather_thresh = np.zeros(len(weather_data))
     
@@ -48,7 +42,7 @@ def make_windows_array(weather_data, threshold):
     
     # Addition of the zeros stripped in the splitting process 
     for i, s in enumerate(serie):
-        if serie[i-1] != 0 and i != 0:
+        if serie[i-1] and i:
             serie.insert(i, 0)
     
     ### Creation of the weather data array
@@ -58,12 +52,14 @@ def make_windows_array(weather_data, threshold):
     # Building of the array by iterating over the windows array:
     # if zero: add a zero
     # if > zero: add an array of len(element) and value = element.
-    # ie: [0,2,0,3] gives [0,2,2,0,3,3,3,]. 
+    # ie: [0,2,0,3] gives [0,2,2,0,3,3,3]. 
+    r = range
+    
     for i, s in enumerate(serie):
-        if s == 0:
+        if not s:
             windows.append(0)
         else:
-            for j in range(s):
+            for j in r(s):
                 windows.append(s)
     
     return windows
@@ -71,6 +67,7 @@ def make_windows_array(weather_data, threshold):
 if __name__ == "__main__":
     np.random.seed(1234)
     data = np.random.rand(21)
+    print(datap)
     v = make_windows_array(data, 0.5)
     plt.plot(serie)
     plt.plot(data)
