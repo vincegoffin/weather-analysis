@@ -1,3 +1,10 @@
+## TODO: add proper doc
+## TODO: add proper comments
+## TODO: add proper tests
+## TODO: add preprocessing routines (thresholds, pandas...)
+## TODO: add post processing routines (percentiles, months...)
+## TODO: add regex spliting instead of buggy split and adding zeros
+
 import numpy as np
 import matplotlib.pyplot as plt
 
