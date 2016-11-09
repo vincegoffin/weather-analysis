@@ -67,7 +67,6 @@ def make_windows_array(weather_data, threshold):
 if __name__ == "__main__":
     np.random.seed(1234)
     data = np.random.rand(21)
-    print(datap)
+    print(data)
     v = make_windows_array(data, 0.5)
-    plt.plot(serie)
     plt.plot(data)
