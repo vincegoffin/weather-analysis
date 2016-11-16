@@ -1,5 +1,10 @@
+# coding: utf-8
+
 import numpy as np
 import matplotlib.pyplot as plt
+import itertools
+import pandas as pd
+import time
 
 def make_windows_array(weather_data, threshold):
     '''
@@ -7,64 +12,72 @@ def make_windows_array(weather_data, threshold):
     The time series is an array like [1.34, 1.45, 1.44] with associated time 
     stamps and return an array like [1, 0, 1] where the numbers are the number 
     of time intervals in the window.
-    
+
     The algorithm works in steps:
-        1) Thresholding to one and zeros (ones are below threshold)
-        2) Transformation of the array into a string to split it on zeros
-        3) Computation of the windows using len(str)
-        4) Construction of the windows array from the lengths array
-    
+	    1) Thresholding to one and zeros (ones are below threshold)
+	    2) Transformation of the array into a string to split it on zeros
+	    3) Computation of the windows using len(str)
+	    4) Construction of the windows array from the lengths array
+
     Inputs: 
-        weather_data = array with the weather data (numpy array)
-        
-        threshold = the threshold related to the nautical spread (float)
+	    weather_data = array with the weather data (numpy array)
+	
+	    threshold = the threshold related to the nautical spread (float)
     '''
     ### Thresholding
-    
-    # Initialization of the of the weather data array
-    weather_thresh = ''.join(str(int(val < threshold)) 
-                             for val in weather_data).split('0') 
-    
-    # Thresholding using numpy array methods and properties 
-    # Creation of the data string, casting to integer, conversion to list then 
-    # join to string, split on "0", return list. 
 
-    
-    ### Creation of the windows array
-    # Initialization of the array    
-    serie = []
-    
-    # Iteration over the list of string to get length (number of ones)
-    for s in weather_thresh:
-        serie.append(len(s))
-    
-    # Addition of the zeros stripped in the splitting process 
-    for i, s in enumerate(serie):
-        if serie[i-1] and i:
-            serie.insert(i, 0)
-    
-    ### Creation of the weather data array
-    # Initialization of the array
-    windows = []
-    
-    # Building of the array by iterating over the windows array:
-    # if zero: add a zero
-    # if > zero: add an array of len(element) and value = element.
-    # ie: [0,2,0,3] gives [0,2,2,0,3,3,3]. 
-    r = range
-    
-    for i, s in enumerate(serie):
-        if not s:
-            windows.append(0)
+    thresholded = (int(val < threshold) for val in weather_data)
+
+    r = []
+
+    # itertools.groupby:
+    # k = the value being repeated
+    # g = said sequence
+    # eg: itertools.groupby(0001100) returns [(0, [0,0,0]), (1, [1,1]), (0, [0,0])]
+    for k , g in itertools.groupby(thresholded):
+        if k:
+            #
+            # Under the threshold: Change [1,...,1] (n times) to [n,...,n] (n times)
+            #
+
+            # Extracting the number of consecutive valid hours (under the threshold)
+            n = len(list(g))  # CAUTION: g gets "exhausted" and can't be reused!!
+
+            r.extend([n]*n)  # eg: [3]*3 = [3,3,3]
         else:
-            for j in r(s):
-                windows.append(s)
-    
-    return windows
+            #
+            # Above the threshold: Leave it as is.
+            #
+            r.extend(list(g))
+
+    return r
+
+    ###
+    ### ONE-LINE VERSION UNDER
+    ###
+
+    # Imbricated generator because len(list(g)) needs to be used twice,
+    # but its first evaluation "exhausts" it (because g is a generator).
+    # return list(itertools.chain(*(  # itertools.chain = multiple list.extend, all in one.
+        # [g*k]*g either returns [0,0,0] or [4,4,4,4]
+    #     [g*k]*g for k, g in ((k, len(list(g))) for k,g in (itertools.groupby(val < threshold for val in weather_data)))
+    # )))
 
 if __name__ == "__main__":
-    np.random.seed(1234)
-    data = np.random.rand(21)
-    print(data)
-    v = make_windows_array(data, 0.5)
+	#np.random.seed(1234)
+	#data = np.random.rand(21)
+    # Example on actual data:
+    # TODO: add datafile
+    meteo = pd.read_csv('/home/vincent/git/weather-analysis/meteo.tsv', sep='\t', decimal=',')
+    data = list(meteo['Hsig'])
+    
+    meteo['year']= (time.strptime(meteo['time'][1],"%d/%m/%Y %H:%M")[0])
+    meteo['month']= (time.strptime(meteo['time'][1],"%d/%m/%Y %H:%M")[1])
+    
+    for thresholds in np.arange(0,3.25,0.25):
+        v = make_windows_array(data, thresholds)
+        meteo['Hsig{thresh}'.format(thresh = int(thresholds * 100))] = v
+    
+    print(meteo.head())
+    # plt.plot(serie)
     plt.plot(data)
